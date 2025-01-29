@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tier Maker</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; }
+    #tier-container { display: grid; grid-template-rows: repeat(5, 1fr); width: 80%; margin: auto; }
+    .tier-row { display: flex; align-items: center; margin: 10px 0; }
+    .tier-row span { width: 50px; font-weight: bold; }
+    .tier-row div { flex: 1; border: 1px solid black; min-height: 100px; background-color: lightgray; display: flex; gap: 5px; padding: 5px; overflow-x: auto; }
+    img { max-width: 100px; cursor: grab; }
+  </style>
+</head>
+<body>
+  <h1>Tier Maker</h1>
+  <input type="file" id="background-upload" accept="image/*">
+  <input type="file" id="image-upload" accept="image/*" multiple>
+  <button id="download-btn">Download Tier</button>
+  <div id="tier-container">
+    <div class="tier-row" data-tier="S"><span>S</span><div></div></div>
+    <div class="tier-row" data-tier="A"><span>A</span><div></div></div>
+    <div class="tier-row" data-tier="B"><span>B</span><div></div></div>
+    <div class="tier-row" data-tier="C"><span>C</span><div></div></div>
+    <div class="tier-row" data-tier="D"><span>D</span><div></div></div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script>
+    const tierContainer = document.getElementById('tier-container');
+    const backgroundUpload = document.getElementById('background-upload');
+    const imageUpload = document.getElementById('image-upload');
+    const downloadBtn = document.getElementById('download-btn');
+
+    // Upload Background
+    backgroundUpload.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          tierContainer.style.backgroundImage = `url(${reader.result})`;
+          tierContainer.style.backgroundSize = 'cover';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Upload Images
+    imageUpload.addEventListener('change', (e) => {
+      const files = e.target.files;
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = document.createElement('img');
+          img.src = reader.result;
+          img.draggable = true;
+          img.addEventListener('dragstart', (event) => {
+            event.dataTransfer.setData('image', img.outerHTML);
+          });
+          document.body.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
+    // Drag & Drop
+    document.querySelectorAll('.tier-row div').forEach(row => {
+      row.addEventListener('dragover', (event) => event.preventDefault());
+      row.addEventListener('drop', (event) => {
+        event.preventDefault();
+        const imageHTML = event.dataTransfer.getData('image');
+        row.innerHTML += imageHTML;
+      });
+    });
+
+    // Download Tier
+    downloadBtn.addEventListener('click', () => {
+      html2canvas(tierContainer).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'tier-list.png';
+        link.href = canvas.toDataURL();
+        link.click();
+      });
+    });
+  </script>
+</body>
+</html>
